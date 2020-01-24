@@ -1,0 +1,25 @@
+[build-system]
+requires = ["flit_core >=2,<3"]
+build-backend = "flit_core.buildapi"
+
+[tool.flit.metadata]
+module = "myvenv"
+author = "Rick Teachey"
+author-email = "ricky@teachey.org"
+home-page = "https://github.com/Ricyteach/myvenv"
+classifiers = ["License :: OSI Approved :: MIT License"]
+requires-python=">=3.6"
+description-file="README.md"
+requires = [
+    "virtualenv",
+    "click",
+]
+
+[tool.flit.metadata.requires-extra]
+test = [
+    "pytest ",
+    "pytest-cov",
+]
+
+[tool.flit.scripts]
+vnv = "myvenv.cli:main"
