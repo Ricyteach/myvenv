@@ -17,7 +17,7 @@ def patched_envs(monkeypatch, tmp_envs_path):
 
 @pytest.fixture()
 def gen_tracked_f():
-    def gen_calltracker():
+    def gen_calltracker(f):
         """Generates a function that tracks whether it has been called."""
 
         def call_tracker(*args, **kwargs):
@@ -26,12 +26,12 @@ def gen_tracked_f():
         call_tracker.called = False
         return call_tracker
 
-    return gen_calltracker
+    return lambda f: gen_calltracker
 
 
 @pytest.fixture()
 def tracked_create(monkeypatch, gen_tracked_f):
-    monkeypatch.setattr(cli, "create", gen_tracked_f())
+    monkeypatch.setattr(cli, "create", gen_tracked_f(cli.create))
     return cli.create
 
 
