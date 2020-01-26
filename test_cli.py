@@ -42,11 +42,25 @@ def test_cli():
 
 
 def test_create(patched_envs, tracked_create):
-    vnv_name = "test_create"
+    arg2 = "test_create"
     runner = CliRunner()
-    result = runner.invoke(cli.main, ["-c", vnv_name], catch_exceptions=False)
+    result = runner.invoke(cli.main, ["-c", arg2], catch_exceptions=False)
     assert result.exit_code == 0
     assert tracked_create.called
+
+
+@pytest.fixture()
+def tracked_ls(monkeypatch, gen_tracked_f):
+    monkeypatch.setattr(cli, "ls", gen_tracked_f())
+    return cli.ls
+
+
+def test_ls(patched_envs, tracked_ls):
+    arg2 = ""
+    runner = CliRunner()
+    result = runner.invoke(cli.main, ["-ls", arg2], catch_exceptions=False)
+    assert result.exit_code == 0
+    assert tracked_ls.called
 
 
 def is_a_venv(path):
@@ -62,3 +76,17 @@ def test_create_func(tmp_envs_path):
     vnv_path = tmp_envs_path / "test_create_func"
     cli.create(vnv_path)
     assert is_a_venv(vnv_path)
+
+
+@pytest.fixture()
+def subdir_path(tmp_envs_path):
+    """Make sure there is something in the temp envs directory."""
+    foo = pathlib.Path(tmp_envs_path, "foo")
+    foo.resolve().mkdir(parents=True)
+    return foo
+
+
+def test_ls_func(patched_envs, subdir_path):
+    result = cli.ls()
+    assert result.returncode == 0
+    assert result.stdout == f"{subdir_path.name}\n"

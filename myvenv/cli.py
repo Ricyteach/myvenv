@@ -17,24 +17,25 @@ class MyVenvError(Exception):
 
 
 def handle_path(ctx, param, value):
-    """Use as a callback for venv path parameters because multiple venv paths should not be specifiied.
+    """Use as a callback for venv path parameters because multiple venv paths should not be specified.
     The path is also patched to be under the user/.envs directory.
     """
     ctx.ensure_object(dict)
-    # check if another option was already specified
-    try:
-        used_param = ctx.obj[_PATH_OPTION_USED]
-    except KeyError:
-        if value is not None:
+    if value:
+        # check if another option was already specified
+        try:
+            used_param = ctx.obj[_PATH_OPTION_USED]
+        except KeyError:
             ctx.obj[_PATH_OPTION_USED] = param
             value = _ENVS / value
-    else:
-        raise MyVenvError(f"Conflicting options: {param!r} and {used_param!r}")
+        else:
+            raise MyVenvError(f"Conflicting options: {param!r} and {used_param!r}")
     return value
 
 
 @click.command(_VNV)  # click 7.1 only: ## , no_args_is_help=True)
 @click.option("--create", "-c", type=_VENV_PATH_TYPE, nargs=1, callback=handle_path)
+@click.option("-ls", nargs=0, callback=handle_path)
 @click.pass_context
 def main(ctx, **kwargs):
     try:
@@ -47,4 +48,8 @@ def main(ctx, **kwargs):
 
 
 def create(vnv_path):
-    subprocess.run(["virtualenv", str(vnv_path.resolve())], check=True)
+    return subprocess.run(["virtualenv", str(vnv_path.resolve())], check=True, capture_output=True)
+
+
+def ls():
+    return subprocess.run(["ls", str(_ENVS.resolve())], check=True, capture_output=True, encoding="UTF8")
