@@ -17,22 +17,23 @@ def patched_envs(monkeypatch, tmp_envs_path):
 
 @pytest.fixture()
 def gen_tracked_f():
-    def gen_calltracker(f):
+    def gen_calltracked():
         """Generates a function that tracks whether it has been called."""
 
-        def call_tracker(*args, **kwargs):
-            call_tracker.called = True
+        def call_tracked(*args, **kwargs):
+            call_tracked.called = True
 
-        call_tracker.called = False
-        return call_tracker
+        call_tracked.called = False
+        return call_tracked
 
-    return lambda f: gen_calltracker
+    return gen_calltracked
 
 
 @pytest.fixture()
-def tracked_create(monkeypatch, gen_tracked_f):
-    monkeypatch.setattr(cli, "create", gen_tracked_f(cli.create))
-    return cli.create
+def tracked_create(gen_tracked_f):
+    original, cli.create = cli.create, gen_tracked_f()
+    yield cli.create
+    cli.create = original
 
 
 def test_cli():
@@ -44,9 +45,9 @@ def test_cli():
 def test_create(patched_envs, tracked_create):
     vnv_name = "test_create"
     runner = CliRunner()
-    result = runner.invoke(cli.main, ["-c", vnv_name], catch_exceptions=False)
+    result = runner.invoke(cli.main, ["create", vnv_name], catch_exceptions=False)
     assert result.exit_code == 0
-    assert tracked_create.called
+    assert cli.create.called
 
 
 def is_a_venv(path):

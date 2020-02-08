@@ -35,12 +35,19 @@ def env_path_argument(exists=False):
     return env_name_arg
 
 
+class _VenvPath(click.Path):
+
+    def coerce_path_result(self, rv):
+        return super().coerce_path_result(rv)
+
+
 @click.group(_VNV)
 def main():
     pass
 
 
 @main.command()
-@env_path_argument
+@env_path_argument()
 def create(env_path):
-    subprocess.run(["virtualenv", str(env_path.resolve())], check=True)
+    env_path_str = f'"{env_path.resolve()!s}"'
+    subprocess.run(["virtualenv", env_path_str], check=True)
